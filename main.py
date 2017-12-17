@@ -22,11 +22,11 @@ import csv
 #     DB_CONNECTIONSTRING = f.readline()
 # DB_CONNECTIONSTRING = "host='localhost' dbname='postgres' user='postgres' password='admin'"
 # conn = psycopg2.connect(DB_CONNECTIONSTRING)
-CACHE_DIR = "D:\TwitterDatastream\PYTHONCACHE_SMALL"
+CACHE_DIR = "D:\TwitterDatastream\PYTHONCACHE_SMALL_TEST"
 EDU_DATA = 'merged.csv'
-TRAIN_FEAT_CSV = 'trainFeat.csv'
-TRAIN_LABS_CSV = 'trainLabs.csv'
-TRAIN_FEAT_LABS_CSV = 'trainFeatLabs.csv'
+TRAIN_FEAT_CSV = 'testFeat.csv'
+TRAIN_LABS_CSV = 'testLabs.csv'
+TRAIN_FEAT_LABS_CSV = 'testFeatLabs.csv'
 FEATURE_NAMES_CSV = 'featureNames.csv'
 sc = SparkContext('local', 'test')
 # location_data = pd.read_csv('new_merged.csv')
@@ -328,7 +328,7 @@ def main():
         #     break
     tweetsRdd = fileNames.flatMap(lambda file: handle_file(file)).filter(lambda tweet: filterTweets(tweet))
     wordsRdd = tweetsRdd.map(lambda tweet: parseTweetText(tweet)).filter(lambda tweet: filterTweets(tweet))
-    countyEduRdd = wordsRdd.map(lambda tweet: ((tweet['tweet_county'], tweet['tweet_education_level']), tweet['tweet_text']))
+    countyEduRdd = wordsRdd.map(lambda tweet: ((tweet['tweet_user_id'], tweet['tweet_education_level']), tweet['tweet_text']))
     countyEduRdd = countyEduRdd.reduceByKey(lambda x, y: combineWordLists(x, y)).map(lambda z: genVocabulary(z))
     tempRes = countyEduRdd.collect()
     print(tempRes, "\n", len(tempRes))

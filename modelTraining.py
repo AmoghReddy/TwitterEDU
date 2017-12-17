@@ -4,7 +4,7 @@ from pyspark.context import SparkContext
 sc = SparkContext('local', 'test')
 # Load and parse the data
 def parsePoint(line):
-    arr = line.replace(',', ' ').split(' ')
+    arr = line.split(',')
     values = [float(x) for x in arr]
     return LabeledPoint(values[0], values[4:])
 
@@ -13,7 +13,7 @@ data = sc.textFile("data/trainFeatLabs.csv")
 parsedData = data.map(parsePoint)
 
 # Build the model
-model = LinearRegressionWithSGD.train(parsedData, iterations=100, step=0.00000001)
+model = LinearRegressionWithSGD.train(parsedData, iterations=100, step=0.1)
 
 # Evaluate the model on training data
 valuesAndPreds = parsedData.map(lambda p: (p.label, model.predict(p.features)))
