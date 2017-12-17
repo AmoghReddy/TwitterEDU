@@ -16,6 +16,7 @@ from scipy import spatial
 import pandas as pd
 import re
 import operator
+import csv
 
 # with open("postgresConnecString.txt", 'r') as f:
 #     DB_CONNECTIONSTRING = f.readline()
@@ -23,6 +24,10 @@ import operator
 # conn = psycopg2.connect(DB_CONNECTIONSTRING)
 CACHE_DIR = "D:\TwitterDatastream\PYTHONCACHE_SMALL"
 EDU_DATA = 'merged.csv'
+TRAIN_FEAT_CSV = 'trainFeat.csv'
+TRAIN_LABS_CSV = 'trainLabs.csv'
+TRAIN_FEAT_LABS_CSV = 'trainFeatLabs.csv'
+FEATURE_NAMES_CSV = 'featureNames.csv'
 sc = SparkContext('local', 'test')
 # location_data = pd.read_csv('new_merged.csv')
 
@@ -274,16 +279,33 @@ def filterTweets(tweet):
     return True
 
 def storeResults(traindata, vocab):
-    trainFeat = np.zeros((len(traindata), len(vocab)))
-    trainLabs = np.zeros((len(traindata), 4))
-    columns = {vocab[voc][0]:voc for voc in range(len(vocab))}
-    print(columns)
-    for row in traindata:
-        print(row[0], "###", row[1])
-        edu = row[0][1]
-        feats = row[1]
+    # trainFeat = np.zeros((len(traindata), len(vocab)))
+    # trainLabs = np.zeros((len(traindata), 4))
+    columnIdx = {vocab[voc][0]: voc for voc in range(len(vocab))}
+    # print(columns)
 
+    with open(TRAIN_FEAT_CSV, 'wt') as trainFeatFile, open(TRAIN_LABS_CSV, 'wt') as trainLabsFile, open(TRAIN_FEAT_LABS_CSV, 'wt') as trainFeatLabsFile:
+        trainFeatwriter = csv.writer(trainFeatFile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+        trainLabswriter = csv.writer(trainLabsFile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+        trainFeatLabswriter = csv.writer(trainFeatLabsFile, delimiter=',',quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+        for row in traindata:
+            # print(row[0], "###", row[1])
+            edu = row[0][1]
+            featDict = row[1]
+            feats = np.zeros(len(columnIdx))
+            for key in featDict:
+                try:
+                    feats[columnIdx[key]] = featDict[key]
+                except:
+                    continue
+            trainFeatwriter.writerow(feats.tolist())
+            trainLabswriter.writerow(list(edu))
+            combList = list(edu) + feats.tolist()
+            trainFeatLabswriter.writerow(combList)
 
+    # with open(FEATURE_NAMES_CSV, 'wt') as featNamesFile:
+    #     featNameswriter = csv.writer(featNamesFile)
+    #     featNameswriter.writerows([columnIdx])
 
 
 def main():
